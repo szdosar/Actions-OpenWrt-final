@@ -18,3 +18,6 @@
 
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+
+# golang
+echo "" | bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/install_go.sh)
