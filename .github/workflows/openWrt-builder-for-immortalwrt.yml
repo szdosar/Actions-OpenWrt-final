@@ -91,11 +91,38 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+# 在 feeds update/install 之后、正式编译之前插入
+    - name: Prepare sing-box source
+      run: |
+        cd openwrt
+        make package/feeds/small/sing-box/prepare V=s
+
+    - name: Patch ech_tag_stub.go (safe & idempotent)
+      run: |
+        cd openwrt
+        set -eux
+        files=$(find build_dir -type f -name ech_tag_stub.go || true)
+        if [ -n "$files" ]; then
+        echo "$files" | while read -r f; do
+        cp "$f" "$f.bak"
+        # 只注释带提示语的那行；已注释则不重复处理
+        grep -q "Due to the migration to stdlib" "$f" && \
+          sed -i '/Due to the migration to stdlib/ s/^/\/\/ /' "$f" || true
+        done
+        else
+        echo "No ech_tag_stub.go found, skip patch."
+        fi
+
+    - name: Build sing-box
+      run: |
+        cd openwrt
+        make package/feeds/small/sing-box/compile V=s
+# 在 feeds update/install 之后、正式编译之前插入
+
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
-        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_ech_stub.sh)
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
