@@ -94,6 +94,7 @@ jobs:
 # === 修补 sing-box ech_tag_stub.go 编译错误 ===
     - name: Patch sing-box ech_tag_stub.go
       run: |
+        cd openwrt
         set -euo pipefail
 
         prepare_once() {
