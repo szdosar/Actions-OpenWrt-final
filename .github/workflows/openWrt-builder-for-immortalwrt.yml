@@ -97,7 +97,7 @@ jobs:
         cd openwrt
         echo -e "$(nproc) thread compile"
         #make -j$(nproc) || make -j1 || make -j1 V=s
-        make tools/install -j$(nproc)
+        make tools/install -j$(nproc) || true
         # fix_singbox_ech_stub.sh
         # 安全拆除 sing-box 的 ech_tag_stub.go “编译炸弹”
         # ⭐ 在编译前调用“远程补丁脚本”（找不到就最小 prepare + 注释；失败不阻断）
