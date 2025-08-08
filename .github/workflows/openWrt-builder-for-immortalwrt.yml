@@ -90,55 +90,10 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    - name: Patch sing-box ech_tag_stub.go (safe prepare if needed)
-      run: |
-        cd openwrt
-        set -euo pipefail
-
-        patch_all() {
-          local files="$1"
-          echo "✅ 找到以下文件："
-          echo "${files}"
-          echo
-          while IFS= read -r f; do
-            [ -n "$f" ] || continue
-            if grep -q "Due to the migration to stdlib" "$f"; then
-              if ! grep -q "^// .*Due to the migration to stdlib" "$f"; then
-                cp -n "$f" "$f.bak" || true
-                sed -i '/Due to the migration to stdlib/ s/^/\/\/ /' "$f"
-                echo "🔧 已修补 -> $f"
-              else
-                echo "✔️ 已是注释状态 -> $f（跳过）"
-              fi
-            else
-              echo "ℹ️ 提示行不存在 -> $f（可能上游已移除，跳过）"
-            fi
-          done <<< "${files}"
-        }
-
-        # 第一次查找
-        files="$(find build_dir -type f -name ech_tag_stub.go 2>/dev/null || true)"
-
-        if [ -z "${files}" ]; then
-          echo "ℹ️ 未找到 ech_tag_stub.go，尝试准备源码..."
-          echo "ℹ️ 确保 host 工具已安装..."
-          make tools/install -j$(nproc) || { echo "⚠️ host 工具安装失败，跳过补丁。"; exit 0; }
-          echo "ℹ️ 执行 prepare..."
-          if make package/feeds/small/sing-box/prepare V=s; then
-            files="$(find build_dir -type f -name ech_tag_stub.go 2>/dev/null || true)"
-          else
-            echo "⚠️ prepare 失败，跳过补丁。"
-            exit 0
-          fi
-        fi
-
-        if [ -z "${files}" ]; then
-          echo "🟡 仍未找到 ech_tag_stub.go（可能上游已移除），跳过补丁。"
-          exit 0
-        fi
-
-        patch_all "${files}"
+        # fix_singbox_ech_stub.sh
+        # 安全修补 sing-box 的 ech_tag_stub.go “编译炸弹”
+        # 只负责查找并注释提示行；若未解压则最小化 prepare，一切失败不阻断主流程
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_ech_stub.sh)
 
     - name: Compile the firmware
       id: compile
