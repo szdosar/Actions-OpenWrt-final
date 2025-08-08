@@ -91,63 +91,35 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-# === 修补 sing-box ech_tag_stub.go 编译错误 ===
-    - name: Patch sing-box ech_tag_stub.go
+    - name: Patch sing-box ech_tag_stub.go (no-prepare, noop-safe)
       run: |
-        cd openwrt
         set -euo pipefail
-
-        prepare_once() {
-          echo "ℹ️ 未找到 ech_tag_stub.go，尝试执行 prepare..."
-          if make package/feeds/small/sing-box/prepare V=s; then
-            echo "✅ prepare 完成。"
-            return 0
-          fi
-          echo "ℹ️ 尝试更新并安装 feed..."
-          ./scripts/feeds update small || true
-          ./scripts/feeds install sing-box || true
-          make package/feeds/small/sing-box/prepare V=s
-          echo "✅ prepare 完成（经由 feed 更新）。"
-        }
-
-        patch_all() {
-          local files="$1"
-          echo "✅ 找到以下 ech_tag_stub.go："
-          echo "$files"
-          echo
-          while IFS= read -r f; do
-            [ -n "$f" ] || continue
-            if [ ! -f "$f.bak" ]; then
-              cp "$f" "$f.bak"
-              echo "🗂 备份 -> $f.bak"
-            fi
-            if grep -q "Due to the migration to stdlib" "$f"; then
-              if ! grep -q "^// .*Due to the migration to stdlib" "$f"; then
-                sed -i '/Due to the migration to stdlib/ s/^/\/\/ /' "$f"
-                echo "🔧 已修补 -> $f"
-              else
-                echo "✔️ 已是注释状态 -> $f（跳过）"
-              fi
-            else
-              echo "ℹ️ 提示行不存在 -> $f（可能已被上游移除，跳过）"
-            fi
-          done <<< "$files"
-          echo
-          echo "✅ 修补完成，可以编译 sing-box。"
-        }
-
         files="$(find build_dir -type f -name ech_tag_stub.go 2>/dev/null || true)"
-        if [ -z "$files" ]; then
-          prepare_once
-          files="$(find build_dir -type f -name ech_tag_stub.go 2>/dev/null || true)"
-        fi
 
-        if [ -z "$files" ]; then
-          echo "🟡 未找到 ech_tag_stub.go，可能上游已移除，跳过修补。"
+        if [ -z "${files}" ]; then
+          echo "ℹ️ 未找到 ech_tag_stub.go（可能尚未解压），跳过补丁，不中断流程。"
           exit 0
         fi
 
-        patch_all "$files"
+        echo "✅ 找到以下文件："
+        echo "${files}"
+        echo
+
+        while IFS= read -r f; do
+          [ -n "$f" ] || continue
+          # 仅当包含提示行时才注释；已注释则跳过
+          if grep -q "Due to the migration to stdlib" "$f"; then
+            if ! grep -q "^// .*Due to the migration to stdlib" "$f"; then
+              cp -n "$f" "$f.bak" || true
+              sed -i '/Due to the migration to stdlib/ s/^/\/\/ /' "$f"
+              echo "🔧 已修补 -> $f"
+            else
+              echo "✔️ 已是注释状态 -> $f（跳过）"
+            fi
+          else
+            echo "ℹ️ 提示行不存在 -> $f（可能上游已移除，跳过）"
+          fi
+        done <<< "${files}"
 
     - name: Compile the firmware
       id: compile
