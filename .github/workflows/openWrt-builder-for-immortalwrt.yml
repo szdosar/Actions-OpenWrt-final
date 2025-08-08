@@ -93,6 +93,7 @@ jobs:
 
     - name: Patch sing-box ech_tag_stub.go (safe prepare if needed)
       run: |
+        cd openwrt
         set -euo pipefail
 
         patch_all() {
