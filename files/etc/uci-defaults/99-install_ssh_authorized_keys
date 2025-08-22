@@ -7,6 +7,7 @@ cat <<'EOF'
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOZ4kuQ80iWT+rFYjdWEfMfolBqAxKtwAEsHQkrs1TY1 openwrt-key
 # 也可以追加更多行
 # ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ... other
+# 注：可以用这个命令生成密钥对 ssh-keygen -t ed25519 -a 64 -f ~/.ssh/openwrt_ed25519 -C "openwrt-key"
 EOF
 }
 
