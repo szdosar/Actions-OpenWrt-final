@@ -99,9 +99,10 @@ jobs:
         chmod +x $FIX_RTL8852BE_WIFI_SH
         chmod +x $UPDATE_SINGBOX_PKG_SH
         cd openwrt
+        cp $GITHUB_WORKSPACE/$UPDATE_SINGBOX_PKG_SH ./
         $GITHUB_WORKSPACE/$DIY_P2_SH
         $GITHUB_WORKSPACE/$FIX_RTL8852BE_WIFI_SH
-        $GITHUB_WORKSPACE/$UPDATE_SINGBOX_PKG_SH
+        ./update_singbox_pkg.sh
 
     - name: Download package
       id: package
