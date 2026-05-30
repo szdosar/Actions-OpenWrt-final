@@ -64,6 +64,7 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH --single-branch --filter=blob:none openwrt
         ln -sf /mnt/workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        ln -sf /mnt/workdir/openwrt $HOME/lede
 
     - name: Load custom feeds
       run: |
@@ -120,12 +121,9 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        #make -j$(nproc) || make -j1 || make -j1 V=s
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/update_singbox_pkg.sh)
         bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_init.sh)
-        #make -j$(nproc) || true
-        #bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_ech_stub.sh) || true
-        #make package/feeds/small/sing-box/compile || true
-        #make package/feeds/packages/geoview/compile || true
+        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_luci-app-adguardhome_for_lede.sh)
         make -j$(nproc)
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
