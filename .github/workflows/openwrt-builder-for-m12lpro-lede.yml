@@ -31,6 +31,7 @@ env:
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   FIX_RTL8852BE_WIFI_SH: fix_rtl8852be_for_lede_yuan.sh
+  UPDATE_SINGBOX_PKG_SH: update_singbox_pkg.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -96,9 +97,11 @@ jobs:
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
         chmod +x $FIX_RTL8852BE_WIFI_SH
+        chmod +x $UPDATE_SINGBOX_PKG_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
         $GITHUB_WORKSPACE/$FIX_RTL8852BE_WIFI_SH
+        $GITHUB_WORKSPACE/$UPDATE_SINGBOX_PKG_SH
 
     - name: Download package
       id: package
@@ -122,7 +125,6 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/update_singbox_pkg.sh)
         bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_singbox_init.sh)
         bash <(curl -Ls https://raw.githubusercontent.com/szdosar/ish/refs/heads/master/fix_luci-app-adguardhome_for_lede.sh)
         make -j$(nproc)
